@@ -1,0 +1,182 @@
+# app.py
+import random
+import json
+import pickle
+import numpy as np
+import nltk
+from nltk.stem import WordNetLemmatizer
+from keras.models import load_model
+from pathlib import Path
+from datetime import datetime
+from flask import Flask, render_template, request, jsonify, send_from_directory, abort
+
+# -------------------------------------------------------------------
+# Flask app setup
+# -------------------------------------------------------------------
+app = Flask(__name__, static_folder="static", template_folder="templates")
+
+# -------------------------------------------------------------------
+# Paths (relative to this folder)
+# -------------------------------------------------------------------
+BASE_DIR = Path(__file__).resolve().parent
+INTENTS_PATH = Path(r'D:\venubot_web\intents.json')
+WORDS_PKL = Path(r'D:\venubot_web\words.pkl')
+CLASSES_PKL = Path(r'D:\venubot_web\classes.pkl')
+MODEL_FILE = Path(r'D:\venubot_web\venubot_model.h5')
+AVATAR_PATH = Path(r'D:\venubot_web\static\Avtar.png')
+
+# -------------------------------------------------------------------
+# Validation — make sure everything exists before running
+# -------------------------------------------------------------------
+missing = []
+for file in [INTENTS_PATH, WORDS_PKL, CLASSES_PKL, MODEL_FILE, AVATAR_PATH]:
+    if not file.exists():
+        missing.append(str(file))
+
+if missing:
+    raise FileNotFoundError(
+        "❌ Missing required files:\n" + "\n".join(missing) +
+        "\n\nPlease make sure all files exist in the correct venubot_web folder."
+    )
+
+# -------------------------------------------------------------------
+# NLP and model loading
+# -------------------------------------------------------------------
+lemmatizer = WordNetLemmatizer()
+
+# Ensure NLTK tokenizers are available (download silently if needed)
+try:
+    nltk.word_tokenize("test")
+except Exception:
+    nltk.download('punkt', quiet=True)
+    nltk.download('wordnet', quiet=True)
+    nltk.download('omw-1.4', quiet=True)
+
+# Load data
+with INTENTS_PATH.open(encoding="utf-8") as f:
+    intents = json.load(f)
+
+words = pickle.load(open(WORDS_PKL, "rb"))
+classes = pickle.load(open(CLASSES_PKL, "rb"))
+model = load_model(MODEL_FILE)
+
+# -------------------------------------------------------------------
+# Helper Functions
+# -------------------------------------------------------------------
+def clean_up_sentence(sentence):
+    sentence_words = nltk.word_tokenize(sentence)
+    return [lemmatizer.lemmatize(word.lower()) for word in sentence_words]
+
+def bag_of_words(sentence):
+    sentence_words = clean_up_sentence(sentence)
+    sentence_word_set = set(sentence_words)
+    bag = [1 if word in sentence_word_set else 0 for word in words]
+    return np.array(bag, dtype=np.float32)
+
+def predict_class(sentence, threshold=0.25):
+    bow = bag_of_words(sentence)
+    res = model.predict(np.array([bow]), verbose=0)[0]
+    results = [[i, r] for i, r in enumerate(res) if r > threshold]
+    results.sort(key=lambda x: x[1], reverse=True)
+    return [{'intent': classes[r[0]], 'probability': float(r[1])} for r in results]
+
+def get_response_from_intent_tag(tag):
+    for intent in intents.get('intents', []):
+        if intent.get('tag') == tag:
+            return random.choice(intent.get('responses', ["Hmm, that doesn’t sound familiar. Let's try again!"]))
+    return "Hmm, that doesn’t sound familiar. Let's try again!"
+
+def get_response(intents_list):
+    if not intents_list:
+        return "🎶 I'm not sure I understand that melody. Could you rephrase it?"
+    return get_response_from_intent_tag(intents_list[0]['intent'])
+
+# -------------------------------------------------------------------
+# Options / Buttons logic
+# -------------------------------------------------------------------
+FIXED_OPTION_TAGS = ['fun_fact', 'ragas_info', 'indian_flute_players']
+
+def sample_option_label(intent):
+    patterns = intent.get('patterns', [])
+    if patterns:
+        label = random.choice(patterns).strip()
+        if len(label) > 70:
+            label = label[:67].rstrip() + "..."
+        return label.capitalize()
+    return intent.get('tag', 'Unknown').replace('_', ' ').capitalize()
+
+def build_options():
+    all_intents = intents.get('intents', [])
+    tag_to_intent = {it.get('tag'): it for it in all_intents}
+
+    options = []
+    # First 3 fixed tags
+    for tag in FIXED_OPTION_TAGS:
+        if tag in tag_to_intent:
+            options.append(tag_to_intent[tag])
+
+    # One random other intent
+    remaining = [it for it in all_intents if it not in options]
+    if remaining:
+        options.append(random.choice(remaining))
+
+    # Ensure 4 options max
+    if len(options) < 4:
+        extras = [it for it in all_intents if it not in options]
+        for ex in extras:
+            if len(options) >= 4:
+                break
+            options.append(ex)
+    return options[:4]
+
+# -------------------------------------------------------------------
+# Routes
+# -------------------------------------------------------------------
+@app.route("/")
+def home():
+    hour = datetime.now().astimezone().hour
+    if 5 <= hour < 12:
+        greet = "Good morning"
+    elif 12 <= hour < 17:
+        greet = "Good afternoon"
+    elif 17 <= hour < 21:
+        greet = "Good evening"
+    else:
+        greet = "Good night"
+
+    return render_template("index.html", avatar_url="/avatar", startup_greeting=greet)
+
+@app.route("/avatar")
+def avatar():
+    if AVATAR_PATH.exists():
+        return send_from_directory(AVATAR_PATH.parent, AVATAR_PATH.name)
+    abort(404)
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    data = request.get_json() or {}
+    message = (data.get("message") or "").strip()
+    option_tag = data.get("option_tag")
+
+    if option_tag:
+        bot_text = get_response_from_intent_tag(option_tag)
+    elif message:
+        ints = predict_class(message)
+        bot_text = get_response(ints)
+    else:
+        bot_text = "🎶 Say something and I'll sing back!"
+
+    options = build_options()
+    options_json = [
+        {"id": str(i+1), "label": sample_option_label(opt), "tag": opt.get("tag")}
+        for i, opt in enumerate(options)
+    ]
+    return jsonify({"bot_message": bot_text, "options": options_json})
+
+# -------------------------------------------------------------------
+# Run
+# -------------------------------------------------------------------
+if __name__ == "__main__":
+    print("✅ Loaded intents.json and model successfully 🎵")
+    app.run(host="127.0.0.1", port=5000, debug=True)
+

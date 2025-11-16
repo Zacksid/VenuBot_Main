@@ -1,0 +1,38 @@
+<!-- templates/index.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>VenuBot</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="chat-wrapper">
+    <div class="sidebar">
+      <img id="avatar" src="/static/Avtar.png" alt="VenuBot avatar"/>
+      <h2>VenuBot</h2>
+      <p id="startup-greeting">{{ startup_greeting }}!</p>
+      <p class="sub">Your musical chatbot</p>
+    </div>
+
+    <div class="chat-area">
+      <div id="messages" class="messages"></div>
+
+
+      <div id="options" class="options"></div>
+
+      <form id="input-form" class="input-area" onsubmit="return sendMessage();">
+        <input id="message-input" autocomplete="off" placeholder="Type a message..." />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // pass timezone to backend via JS
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+  </script>
+  <script src="/static/chat.js"></script>
+</body>
+</html>

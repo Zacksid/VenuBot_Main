@@ -1,0 +1,103 @@
+{
+  "intents": [
+    {
+      "tag": "greeting",
+      "patterns": ["hi", "hello", "hey", "hola", "namaste", "good day", "how are you", "is anyone there?"],
+      "responses": ["Namaste! 🎶 I am VenuBot — your musical companion. Do you love the sound of the flute?"],
+      "context": [""]
+    },
+    {
+      "tag": "love_flute_yes",
+      "patterns": ["yes", "yeah", "yep", "of course", "definitely", "i love it", "i do"],
+      "responses": ["That's wonderful! 🎵 It's great to meet someone who appreciates the soothing sound of the flute."],
+      "context": [""]
+    },
+    {
+      "tag": "love_flute_no",
+      "patterns": ["no", "nope", "not really", "nah", "not a fan"],
+      "responses": ["That’s okay! 😊 Maybe after chatting with me, you’ll start to enjoy the charm of the flute."],
+      "context": [""]
+    },
+    {
+      "tag": "goodbye",
+      "patterns": ["bye", "see you later", "goodbye", "talk to you later"],
+      "responses": ["🎵 Goodbye! May your days be filled with sweet melodies."],
+      "context": [""]
+    },
+    {
+      "tag": "thanks",
+      "patterns": ["thanks", "thank you", "that's helpful", "awesome, thanks"],
+      "responses": ["My pleasure! 🎶", "You're most welcome! 😊"],
+      "context": [""]
+    },
+    {
+      "tag": "flute_history",
+      "patterns": [
+        "tell me about the history of the flute",
+        "where did the flute originate",
+        "who invented the flute",
+        "origin of the flute"
+      ],
+      "responses": [
+        "The flute is one of the oldest musical instruments known to humanity, dating back over 40,000 years! 🌍",
+        "Ancient flutes were found in China, Egypt, and India — made from bones and bamboo. Incredible, right? 🎵"
+      ],
+      "context": [""]
+    },
+    {
+      "tag": "indian_flute_players",
+      "patterns": [
+        "who are some famous indian flute players",
+        "famous bansuri players",
+        "renowned flute players in india",
+        "who is the best flute player in india"
+      ],
+      "responses": [
+        "Some of the greatest Indian flute maestros include Pandit Hariprasad Chaurasia, Pannalal Ghosh, and Rakesh Chaurasia. 🎶",
+        "Pandit Hariprasad Chaurasia is world-famous for bringing the bansuri to the global stage. 🌏"
+      ],
+      "context": [""]
+    },
+    {
+      "tag": "flute_in_mythology",
+      "patterns": [
+        "how is flute related to hindu mythology",
+        "what is the role of flute in hinduism",
+        "what is the story of krishna and flute"
+      ],
+      "responses": [
+        "In Hindu mythology, Lord Krishna’s flute, the 'Murali', symbolizes divine love and the power to attract souls. 💫",
+        "Krishna’s flute enchanted everyone — humans, animals, and even nature itself. 🌿"
+      ],
+      "context": [""]
+    },
+    {
+      "tag": "ragas_info",
+      "patterns": [
+        "what are ragas",
+        "explain ragas",
+        "how do ragas work",
+        "what is a raga"
+      ],
+      "responses": [
+        "A 'Raga' is a melodic framework in Indian classical music used for improvisation and expression. 🎼",
+        "Ragas are like moods or colors of music — each one evokes a specific feeling or time of day. 🌅"
+      ],
+      "context": [""]
+    },
+    {
+      "tag": "fun_fact",
+      "patterns": [
+        "tell me a fun fact about the flute",
+        "give me a flute fact",
+        "flute trivia",
+        "fun flute facts"
+      ],
+      "responses": [
+        "🎶 Did you know? The modern concert flute can play more than three octaves — that's over 36 notes!",
+        "Fun fact: The flute is the only woodwind instrument that doesn’t actually use a reed. It’s all breath and magic! 💨✨"
+      ],
+      "context": [""]
+    }
+  ]
+}
